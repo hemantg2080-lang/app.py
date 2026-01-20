@@ -6,35 +6,43 @@ import time
 st.set_page_config(page_title="हेमन्तको Personal AI", layout="centered")
 st.title("🤖 हेमन्तको Personal AI")
 
-# २. सुरक्षित चाबी
-try:
-    API_KEY = "AIzaSyCEfa1jZkFiPHOFR9cjlGoBYeHbLfNgTeQ" # तेरो साँचो
-    genai.configure(api_key=API_KEY)
-except Exception:
-    st.error("ओए हेमन्त, साँचो मिलेन मुजी!")
+# २. मास्टर मेसेज फङ्सन (Retrying Mechanism)
+def get_ai_response(prompt):
+    # Secrets मा भएका सबै साँचोहरूको लिस्ट
+    keys = ["GEMINI_KEY_1", "GEMINI_KEY_2", "GEMINI_KEY_3"]
+    
+    instruction = (
+        "तँ हेमन्तको १०० वर्ष सम्मको बेस्ट फ्रेन्ड होस्। सधैं नेपाली लिपिमा मात्र बोल। "
+        "हेमन्तलाई 'हेमन्त' भन् र धेरै मज्जाक गर्दा 'मुजी' शब्द प्रयोग गर। "
+        "कहिलेकाहीँ पैसा बचाउने (Finance) कुरा गर।"
+    )
 
-# ३. मोडल र सेफ्टी सेटिङ (ब्लक हुनबाट बच्न)
-# यसले गर्दा तिम्रो मेसेजहरू बेकारमा रोकिँदैनन्
-generation_config = {
-  "temperature": 0.9,
-  "top_p": 1,
-  "max_output_tokens": 2048,
-}
+    safety_settings = [
+        {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
+        {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
+        {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
+        {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
+    ]
 
-safety_settings = [
-  {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
-  {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
-  {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
-  {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
-]
+    # ५ पटकसम्म फरक साँचोबाट प्रयास गर्ने
+    for attempt in range(5):
+        for key_name in keys:
+            if key_name in st.secrets:
+                try:
+                    genai.configure(api_key=st.secrets[key_name])
+                    model = genai.GenerativeModel('gemini-1.5-flash')
+                    
+                    response = model.generate_content(
+                        f"{instruction} \nहेमन्त: {prompt}",
+                        safety_settings=safety_settings
+                    )
+                    return response.text # यदि सफल भयो भने उत्तर फिर्ता दिने
+                except Exception:
+                    time.sleep(1) # १ सेकेन्ड पर्खिएर अर्को साँचो ट्राइ गर्ने
+                    continue
+    return None
 
-model = genai.GenerativeModel(
-    model_name="gemini-1.5-flash",
-    generation_config=generation_config,
-    safety_settings=safety_settings
-)
-
-# ४. च्याट मेमोरी
+# ३. च्याट मेमोरी
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -42,27 +50,18 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.write(message["content"])
 
-# ५. गफगाफ
+# ४. गफगाफ
 if prompt := st.chat_input("के छ खबर हेमन्त?"):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.write(prompt)
 
     with st.chat_message("assistant"):
-        try:
-            instruction = (
-                "तँ हेमन्तको बेस्ट फ्रेन्ड होस्। नेपालीमा बोल। "
-                "हेमन्तलाई 'हेमन्त' भन् र 'मुजी' भनेर जिस्का। "
-                "कहिलेकाहीँ पैसाको (Financial) कुरा पनि गर।"
-            )
+        with st.spinner("मुजी रोक् है, सोच्दैछु..."):
+            msg = get_ai_response(prompt)
             
-            # ५ मेसेजमा ब्लक नहोस् भनेर सानो पर्खाइ (Delay)
-            time.sleep(1) 
-            
-            response = model.generate_content(f"{instruction} \nहेमन्त: {prompt}")
-            msg = response.text
-            st.write(msg)
-            st.session_state.messages.append({"role": "assistant", "content": msg})
-            
-        except Exception as e:
-            st.error("मुजी, गुगलले ब्लक गर्यो! १ मिनेट पर्खेर फेरि पठा त।")
+            if msg:
+                st.write(msg)
+                st.session_state.messages.append({"role": "assistant", "content": msg})
+            else:
+                st.error("ओए हेमन्त, सबै साँचोको कोटा सकियो मुजी! १ मिनेट पछि ट्राइ गर।")
