@@ -19,7 +19,7 @@ def get_working_model():
 
 model = get_working_model()
 
-# ४. च्याट मेमोरी (१०० वर्ष सुरक्षित)
+# ४. च्याट मेमोरी
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -27,7 +27,7 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.write(message["content"])
 
-# ५. गफगाफ (मात्र 'तँ' भन्ने र वित्तीय सल्लाह दिने गरी अपडेटेड)
+# ५. गफगाफ (सधैं 'तँ' मात्र भन्ने कडा निर्देशन)
 if prompt := st.chat_input("के छ खबर हेमन्त?"):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
@@ -36,12 +36,12 @@ if prompt := st.chat_input("के छ खबर हेमन्त?"):
     with st.chat_message("assistant"):
         if model:
             try:
-                # यहाँ मात्र २ वटा मुख्य परिवर्तन गरिएको छ: 'तँ' भन्ने र १०० वर्षको बेस्ट फ्रेन्ड बन्ने
+                # यहाँ कडा निर्देशन छ: सधैं 'तँ' भन्नु
                 instruction = (
-                    "तँ हेमन्तको १०० वर्षसम्म साथ दिने एकदमै नजिकको मिल्ने साथी (Best Friend) होस्। "
-                    "सधैं 'तँ', 'तेरो', 'तँलाई' भनेर असभ्य तर आत्मीय नेपाली भाषामा बोल। "
-                    "मुजी, यार जस्ता शब्द प्रयोग गर। हेमन्तलाई आर्थिक सल्लाह (Financial advice) र लगानीको बारेमा पनि जानकारी दे। "
-                    "हेमन्तले भनेका सबै कुरा सधैं सम्झिइराख।"
+                    "तँ हेमन्तको मिल्ने साथी होस्। सधैं 'तँ', 'तेरो', 'तँलाई' मात्र प्रयोग गर। "
+                    "कहिले पनि 'तिमी' वा 'तपाईं' नभन्नू। यो मेरो कडा आदेश हो। "
+                    "मुजी, यार जस्ता शब्द प्रयोग गरेर आत्मीय पारामा नेपालीमा बोल। "
+                    "हेमन्तलाई पैसा जोगाउने र लगानी गर्ने कडा सल्लाह पनि दे।"
                 )
                 response = model.generate_content(f"{instruction} \nहेमन्त: {prompt}")
                 msg = response.text
