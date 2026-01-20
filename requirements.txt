@@ -1,3 +1,2 @@
-
-groq
+google-generativeai
 streamlit
