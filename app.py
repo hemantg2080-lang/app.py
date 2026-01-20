@@ -4,11 +4,11 @@ from groq import Groq
 st.set_page_config(page_title="हेमन्तको Super AI", layout="centered")
 st.title("🚀 हेमन्तको Super AI")
 
-# १. सेक्रेट साँचो तान्ने
+# १. सेक्रेट साँचो (API Key) तान्ने
 if "GROQ_API_KEY" in st.secrets:
     client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 else:
-    st.error("हेमन्त, Secrets मा GROQ_API_KEY हाल मुजी!")
+    st.error("हेमन्त, Streamlit Secrets मा GROQ_API_KEY हाल मुजी!")
     st.stop()
 
 if "messages" not in st.session_state:
