@@ -5,16 +5,23 @@ import google.generativeai as genai
 st.set_page_config(page_title="हेमन्तको Personal AI", layout="centered")
 st.title("🤖 हेमन्तको Personal AI")
 
-# २. तेरो चाबी
-API_KEY = "AIzaSyAxaYgUrOshaRmVjObQQN6u7VPmq-yk2wo"
-genai.configure(api_key=API_KEY)
+# २. सुरक्षित तरिकाले चाबी तान्ने (Secrets बाट)
+# अब कोडमा साँचो राख्नु पर्दैन
+try:
+    API_KEY = st.secrets["GEMINI_API_KEY"]
+    genai.configure(api_key=API_KEY)
+except Exception:
+    st.error("ओए हेमन्त, साँचो (API Key) सेटिङमा हालिस् त?")
 
-# ३. उपलब्ध मोडल आफैं खोज्ने जादुई तरिका
+# ३. उपलब्ध मोडल खोज्ने
 @st.cache_resource
 def get_working_model():
-    for m in genai.list_models():
-        if 'generateContent' in m.supported_generation_methods:
-            return genai.GenerativeModel(m.name)
+    try:
+        for m in genai.list_models():
+            if 'generateContent' in m.supported_generation_methods:
+                return genai.GenerativeModel(m.name)
+    except:
+        return None
     return None
 
 model = get_working_model()
@@ -43,4 +50,4 @@ if prompt := st.chat_input("के छ खबर हेमन्त?"):
             except Exception:
                 st.error("गुगलको सर्भर व्यस्त छ, १ मिनेट पछि फेरि पठा त!")
         else:
-            st.error("मोडल फेला परेन। आफ्नो API Key चेक गर!")
+            st.error("सेटिङमा API Key मिलेन मुजी!")
