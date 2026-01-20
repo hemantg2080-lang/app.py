@@ -5,17 +5,15 @@ import google.generativeai as genai
 st.set_page_config(page_title="हेमन्तको Personal AI", layout="centered")
 st.title("🤖 हेमन्तको Personal AI")
 
-# २. तेरो चाबी (यसमा मात्र परिवर्तन गरिएको छ)
+# २. तेरो चाबी (API Key) - यसलाई मात्र अपडेट गरिएको छ
 API_KEY = "AIzaSyAxaYgUrOshaRmVjObQQN6u7VPmq-yk2wo"
 genai.configure(api_key=API_KEY)
 
-# ३. उपलब्ध मोडल आफैं खोज्ने जादुई तरिका
+# ३. उपलब्ध मोडल खोज्ने तरिका
 @st.cache_resource
 def get_working_model():
-    for m in genai.list_models():
-        if 'generateContent' in m.supported_generation_methods:
-            return genai.GenerativeModel(m.name)
-    return None
+    # एरर नआओस् भनेर सिधै एउटा चल्ने मोडल नाम दिइएको छ
+    return genai.GenerativeModel('gemini-1.5-flash')
 
 model = get_working_model()
 
@@ -41,6 +39,6 @@ if prompt := st.chat_input("के छ खबर हेमन्त?"):
                 st.write(msg)
                 st.session_state.messages.append({"role": "assistant", "content": msg})
             except Exception:
-                st.error("गुगलको सर्भर व्यस्त छ, १ मिनेट पछि फेरि पठा त!")
+                st.error("ओए हेमन्त, गुगलको सर्भर व्यस्त छ, १ मिनेट पछि फेरि पठा त!")
         else:
             st.error("मोडल फेला परेन। आफ्नो API Key चेक गर!")
