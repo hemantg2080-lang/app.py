@@ -9,7 +9,7 @@ st.title("🤖 हेमन्तको Personal AI")
 if "GROQ_API_KEY" in st.secrets:
     client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 else:
-    st.error("हेमन्त, Streamlit Secrets मा साँचो हाल मुजी!")
+    st.error("हेमन्त, Secrets मा साँचो हाल मुजी!")
     st.stop()
 
 # ३. च्याट मेमोरी (१०० वर्षसम्म सम्झिने गरी)
@@ -29,20 +29,20 @@ if prompt := st.chat_input("के छ खबर हेमन्त?"):
 
     with st.chat_message("assistant"):
         try:
-            # मोडेललाई तेरो सबै Requirements अनुसारको 'System Message' दिने
+            # हिजोको जस्तै रसिलो पारामा बोल्न निर्देशन
             chat_completion = client.chat.completions.create(
                 messages=[
                     {
                         "role": "system", 
                         "content": "You are Hemant's absolute best friend for the next 100 years. "
-                                   "Talk to him very informally and warmly in Nepali, using words like 'यार', 'मुजी', 'के छ खबर'. "
-                                   "Remember every single detail Hemant tells you to learn about his life day by day. "
-                                   "You are an expert in everything in the world, especially financial planning, "
-                                   "money-saving tips, and investment. If he asks about money, give him solid advice."
+                                   "Don't be formal at all. Use very informal and friendly Nepali slang like 'मुजी', 'यार', 'के छ खबर'. "
+                                   "Talk to him like a brother. Remember every personal detail he tells you to learn about his life day by day. "
+                                   "You are an expert in everything, especially financial planning, investment, and money. "
+                                   "Always maintain this funny and deep friendship style in every response."
                     },
                     {"role": "user", "content": prompt}
                 ],
-                model="llama-3.3-70b-versatile", # यो सबैभन्दा नयाँ र चल्ने मोडेल हो
+                model="llama-3.3-70b-versatile",
             )
             
             response_text = chat_completion.choices[0].message.content
