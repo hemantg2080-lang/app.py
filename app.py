@@ -1,62 +1,28 @@
-import streamlit as st
+import gradio as gr
 import google.generativeai as genai
+import os
 
-# १. एपको नाम र डिजाइन
-st.set_page_config(page_title="हेमन्तको Personal AI", layout="centered")
-st.title("🤖 हेमन्तको Personal AI")
-
-# २. साँचोहरू म्यानेज गर्ने फङ्सन
-def get_ai_response(prompt):
-    # ९ वटा साँचोको लिस्ट
-    keys = [f"GEMINI_KEY_{i}" for i in range(1, 10)]
-    
-    instruction = (
-        "तँ हेमन्तको १०० वर्ष सम्मको बेस्ट फ्रेन्ड होस्। सधैं नेपालीमा बोल। "
-        "हेमन्तलाई 'हेमन्त' भन् र धेरै मज्जाक गर्दा 'मुजी' शब्द प्रयोग गर। "
-        "कहिलेकाहीँ पैसा बचाउने (Finance) कुरा पनि गर।"
-    )
-
-    safety_settings = [
-        {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
-        {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE"},
-        {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE"},
-        {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE"},
-    ]
-
-    # हरेक साँचो चेक गर्ने
-    for key_name in keys:
-        if key_name in st.secrets:
+def chat_with_gemini(message, history):
+    # ९ वटा साँचोहरू पालैपालो ट्राइ गर्ने (Switching mechanism)
+    for i in range(1, 10):
+        api_key = os.getenv(f"GEMINI_KEY_{i}")
+        if api_key:
             try:
-                genai.configure(api_key=st.secrets[key_name])
+                genai.configure(api_key=api_key)
                 model = genai.GenerativeModel('gemini-1.5-flash')
                 
-                response = model.generate_content(
-                    f"{instruction} \nहेमन्त: {prompt}",
-                    safety_settings=safety_settings
-                )
+                # हेमन्तको लागि कडा निर्देशन
+                instruction = "तँ हेमन्तको बेस्ट फ्रेन्ड होस्। नेपालीमा बोल र मज्जाक गर्दा 'मुजी' भन्।"
+                
+                response = model.generate_content(f"{instruction}\nहेमन्त: {message}")
                 return response.text
             except Exception:
-                continue # यो साँचो चलेन भने अर्कोमा जाने
-    return None
+                continue # साँचो चलेन भने अर्को ट्राइ गर्ने
+                
+    return "मुजी हेमन्त, एउटा पनि साँचो भेटिएन! Settings > Variables and secrets मा नाम मिलेको छ कि छैन चेक गर।"
 
-# ३. गफगाफको रेकर्ड (Memory)
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+# Gradio Interface
+demo = gr.ChatInterface(fn=chat_with_gemini, title="🤖 हेमन्तको Personal AI")
 
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.write(message["content"])
-
-# ४. मेसेज पठाउने ठाउँ
-if prompt := st.chat_input("के छ खबर हेमन्त?"):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.write(prompt)
-
-    with st.chat_message("assistant"):
-        msg = get_ai_response(prompt)
-        if msg:
-            st.write(msg)
-            st.session_state.messages.append({"role": "assistant", "content": msg})
-        else:
-            st.error("मुजी हेमन्त, एउटा पनि साँचो (Key) भेटिएन! Secrets मा नाम मिलेको छ कि नाइँ चेक गर।")
+if __name__ == "__main__":
+    demo.launch()
